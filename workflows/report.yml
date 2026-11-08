@@ -1,0 +1,42 @@
+# Runs repo_health.py on a schedule and commits the report back to the repo.
+name: Repo health report
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # every day at 11:00 UTC (6am Eastern)
+  workflow_dispatch:        # adds a "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write           # needed so the job can push the report commit
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate report
+        run: python repo_health.py
+        env:
+          # GITHUB_TOKEN is created automatically for every workflow run.
+          # Your script reads it from the environment -- never hard-code tokens.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Who to report on. Change this to your username or any public org.
+          TARGET_OWNER: Ben6246
+
+      - name: Commit report if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add report.json report.md
+          git diff --staged --quiet || git commit -m "Update repo health report"
+          git push
