@@ -8,7 +8,7 @@ Docs: https://docs.github.com/en/rest
 """
 
 import os
-
+from datetime import datetime, timedelta
 import requests
 
 API_URL = "https://api.github.com"
@@ -60,7 +60,7 @@ def summarize_repo(repo):
     """Turn one raw repo dict from the API into a small dict with only the
     fields you care about (name, stars, open issues, last push, etc.)."""
 
-    summed_keys = {'name', 'pushed_at', 'open_issues_count', 'has_pull_requests', 'open_issues'}
+    summed_keys = {'name', 'pushed_at', 'open_issues_count', 'has_pull_requests'}
     summed_repo = {key: repo[key] for key in summed_keys if key in repo}
     return summed_repo
 
@@ -68,13 +68,23 @@ def summarize_repo(repo):
 def find_problems(summary):
     """Return a list of human-readable problem strings for one repo.
     An empty list means the repo is healthy."""
-    # TODO
-    pass
-
+    problems = []
+    name = summary['name']
+    last_push = datetime.strptime(summary['pushed_at'][:10], "%Y-%m-%d")
+    #late_date = datetime.now() - timedelta(days = 90)
+    date_diff = last_push - datetime.now()
+    day_diff = date_diff.days
+    if(day_diff > 90):
+        problems.append[f"PROBLEM: Last push to repo {name} was more than 90 days ago, work has become stale."]
+    problem_count = summary['open_issues_count']
+    if(problem_count != 0):
+        problems.append[f"PROBLEM: There are {problem_count} problems detected in repo {name}"]
+    if(summary['has_pull_requests']):
+        problems.append[f"PROBLEM: There are unresolved pull requests for repo {name}"]
 
 def write_reports(results):
     """Write report.json (for machines) and report.md (for humans)."""
-    # TODO
+    
     pass
 
 
